@@ -1,0 +1,29 @@
+# Entornos virtuales
+.venv/
+env/
+venv/
+
+# Archivos de Python compilados
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Cache de pytest y coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Archivos temporales / logs
+*.log
+*.tmp
+*.swp
+
+# Configuración local
+.DS_Store
+.idea/
+.vscode/
+
+# Docker
+*.pigud
+*.sock
