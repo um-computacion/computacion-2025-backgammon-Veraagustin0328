@@ -1,7 +1,7 @@
+
 import random
 
 class Dice:
-    
     def __init__(self, rng=None):
         self.__rng__ = rng or random.Random()
         self.__ultima_tirada__ = (0, 0)
