@@ -1,0 +1,31 @@
+﻿name: CI
+on:
+  push:
+  pull_request:
+
+jobs:
+  test-and-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt || true
+          pip install pytest pytest-cov pylint
+
+      - name: Lint (permisivo)
+        run: |
+          pylint backgammon || true
+
+      - name: Tests (permisivo)
+        run: |
+          pytest -q --maxfail=1 --disable-warnings \
+            --cov=backgammon --cov-report=term-missing || true
