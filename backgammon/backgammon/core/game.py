@@ -1,4 +1,3 @@
-# backgammon/backgammon/core/game.py
 from .board import Board
 
 class Game:
