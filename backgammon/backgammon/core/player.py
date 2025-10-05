@@ -1,34 +1,24 @@
 class Player:
-    def __init__(self, nombre: str):
-        self.__nombre__ = str(nombre)
-        self.__fichas__ = 15
-        self.__puntos__ = 0
+    'Representa un jugador del backgammon.'
 
-    
-    def get_nombre(self):
-        return self.__nombre__
+    def __init__(self, name, color):
+        'Crea un jugador con nombre y color (WHITE o BLACK).'
+        self.__name = name
+        self.__color = color
 
-    def set_nombre(self, n: str):
-        self.__nombre__ = str(n)
+    def get_name(self):
+        'Devuelve el nombre del jugador.'
+        return self.__name
 
-    def get_fichas(self):
-        return self.__fichas__
+    def set_name(self, name):
+        'Cambia el nombre del jugador.'
+        self.__name = name
 
-    def set_fichas(self, cantidad: int):
-        self.__fichas__ = int(cantidad)
+    def get_color(self):
+        'Devuelve el color del jugador.'
+        return self.__color
 
-    def get_puntos(self):
-        return self.__puntos__
+    def set_color(self, color):
+        'Cambia el color del jugador.'
+        self.__color = color
 
-    def set_puntos(self, n: int):
-        self.__puntos__ = int(n)
-
-    
-    def sumar_puntos(self, n: int):
-        self.__puntos__ += int(n)
-
-    def perder_ficha(self):
-        if self.__fichas__ > 0:
-            self.__fichas__ -= 1
-        else:
-            raise ValueError("El jugador no tiene fichas para perder.")
