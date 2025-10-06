@@ -1,33 +1,39 @@
-class Board:
-    """Tablero del backgammon, donde se ponen las fichas."""
+from __future__ import annotations
+from abc import ABC, abstractmethod
+from typing import Dict, List
 
-    def __init__(self, puntos=24):
-        """Arranca el tablero con 24 puntos, más la barra y las fichas que salieron."""
-        self.__puntos = puntos
-        self.__bar = {"WHITE": 0, "BLACK": 0}
-        self.__borne_off = {"WHITE": 0, "BLACK": 0}
 
-    def get_puntos(self):
-        """Devuelve la cantidad de puntos que tiene el tablero (24)."""
-        return self.__puntos
+class BaseBoard(ABC):
+    """Base para tableros de Backgammon (OCP)."""
 
-    def set_puntos(self, n):
-        """Cambia la cantidad de puntos (aunque siempre deberían ser 24)."""
-        self.__puntos = int(n)
+    @abstractmethod
+    def initialize_points(self) -> List[list]:
+        """Devuelve la estructura inicial de 24 puntos."""
+        raise NotImplementedError
 
-    def get_bar(self):
-        """Devuelve la barra (fichas comidas que esperan para volver a entrar)."""
-        return self.__bar
 
-    def set_bar(self, bar):
-        """Cambia la barra por lo que le paso."""
-        self.__bar = bar
+class Board(BaseBoard):
+    """Tablero estándar: 24 puntos + bar + off."""
 
-    def get_borne_off(self):
-        """Devuelve cuántas fichas ya salieron del tablero."""
-        return self.__borne_off
+    def __init__(self) -> None:
+        # Acá no me caliento con cómo se inicializa, delego al método.
+        self.points: List[list] = self.initialize_points()
+        self.bar: Dict[str, int] = {"blanco": 0, "negro": 0}
+        self.off: Dict[str, int] = {"blanco": 0, "negro": 0}
 
-    def set_borne_off(self, bo):
-        """Actualiza la cantidad de fichas que ya salieron."""
-        self.__borne_off = bo
+    def initialize_points(self) -> List[list]:
+        # Por ahora tablero vacío. Si mañana querés arrancar con fichas puestas, lo cambiás acá
+        # o armás otra clase que herede y listo.
+        return [[] for _ in range(24)]
+
+    def point_count(self, index: int) -> int:
+        # Dame cuántas fichas hay en el punto 1..24. Simple y sin drama.
+        i = index - 1
+        if not (0 <= i < 24):
+            raise IndexError("El punto debe estar entre 1 y 24.")
+        return len(self.points[i])
+
+    def __repr__(self) -> str:
+        return f"Board(points={len(self.points)}, bar={self.bar}, off={self.off})"
+
 
