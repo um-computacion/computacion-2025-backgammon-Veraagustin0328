@@ -16,18 +16,17 @@ class Board(BaseBoard):
     """Tablero estándar: 24 puntos + bar + off."""
 
     def __init__(self) -> None:
-        # Acá no me caliento con cómo se inicializa, delego al método.
+        # No presto atencion de cómo se inicializa, delego al método.
         self.points: List[list] = self.initialize_points()
         self.bar: Dict[str, int] = {"blanco": 0, "negro": 0}
         self.off: Dict[str, int] = {"blanco": 0, "negro": 0}
 
     def initialize_points(self) -> List[list]:
-        # Por ahora tablero vacío. Si mañana querés arrancar con fichas puestas, lo cambiás acá
-        # o armás otra clase que herede y listo.
+        # Por ahora tablero vacío. Si luego querio arrancar con fichas puestas, lo cambio acá o armamos otra clase que herede 
         return [[] for _ in range(24)]
 
     def point_count(self, index: int) -> int:
-        # Dame cuántas fichas hay en el punto 1..24. Simple y sin drama.
+        # Me da cuántas fichas hay en el punto 1..24. Simple 
         i = index - 1
         if not (0 <= i < 24):
             raise IndexError("El punto debe estar entre 1 y 24.")
