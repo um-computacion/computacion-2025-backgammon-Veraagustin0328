@@ -1,31 +1,31 @@
-# backgammon/backgammon/core/dice.py
+from __future__ import annotations
 import random
+from typing import Callable, List
 
 class Dice:
-    """Lógica de tiradas de dos dados de 6 caras."""
-    def __init__(self, rng=None):
-        self.__rng__ = rng or random.Random()
-        self.__ultima_tirada__ = (0, 0)
+    """ solo maneja tiradas/estado.
+     podés inyectar la función randint para tests (o usar from_seed) """
 
-    def get_rng(self):
-        return self.__rng__
+    def __init__(self, randint: Callable[[int, int], int] | None = None) -> None:
+        # Si no me pasan nada, uso el randint de random. Si me pasan uno, listo para testear.
+        self._randint = randint or random.randint
+        # Arranco con algo simple para no dejarlo vacío.
+        self.values: List[int] = [1, 1]
 
-    def set_rng(self, rng):
-        self.__rng__ = rng
+    @classmethod
+    def from_seed(cls, seed: int) -> "Dice":
+        # Con esto puedo testear siempre lo mismo: RNG con semilla fija.
+        rng = random.Random(seed)
+        return cls(randint=rng.randint)
 
-    def get_ultima_tirada(self):
-        return self.__ultima_tirada__
+    def roll(self) -> List[int]:
+        # Tiro dos veces, guardo, y devuelvo. Listo.
+        self.values = [self._randint(1, 6), self._randint(1, 6)]
+        return self.values
 
-    def set_ultima_tirada(self, tirada):
-        if (not isinstance(tirada, tuple) or len(tirada) != 2
-            or any(not isinstance(x, int) or x < 1 or x > 6 for x in tirada)):
-            raise ValueError("Tirada inválida: debe ser (d1, d2) con valores de 1 a 6")
-        self.__ultima_tirada__ = tirada
+    def is_double(self) -> bool:
+        # Si los dos números son iguales, es doble. Fin.
+        return self.values[0] == self.values[1]
 
-    def roll(self):
-        a = self.__rng__.randint(1, 6)
-        b = self.__rng__.randint(1, 6)
-        self.__ultima_tirada__ = (a, b)
-        return self.__ultima_tirada__
-
-
+    def __repr__(self) -> str:
+        return f"Dice({self.values[0]}, {self.values[1]})"

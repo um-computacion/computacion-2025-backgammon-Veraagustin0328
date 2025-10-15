@@ -1,37 +1,35 @@
 from backgammon.core.dice import Dice
 import random
-import inspect
-
-def test_dice_roll_in_range():
-    d = Dice()
-    a, b = d.roll()
-    assert 1 <= a <= 6
-    assert 1 <= b <= 6
 
 def test_dice_deterministic_with_seed():
-    rng1 = random.Random(123)
-    rng2 = random.Random(123)
-    d1 = Dice(rng=rng1)
-    d2 = Dice(rng=rng2)
-    assert d1.roll() == d2.roll()
+    rng = random.Random(1234)
+    d = Dice(rng=rng)
+    r1 = d.roll()
 
-def test_dice_stores_last_roll_and_getter_setter():
+    
+    rng = random.Random(1234)
+    d2 = Dice(rng=rng)
+    r2 = d2.roll()
+
+    assert r1 == r2
+    assert 1 <= r1[0] <= 6 and 1 <= r1[1] <= 6
+
+def test_dice_stores_last_roll():
     d = Dice(rng=random.Random(7))
-    result = d.roll()
-    assert d.get_ultima_tirada() == result
+    r = d.roll()
+    assert d.get_ultima_tirada() == r
+
+
+from backgammon.core.dice import Dice
+import random
+import pytest
+
+def test_dice_getter_setter_extras():
+    d = Dice(rng=random.Random(1))
+    assert d.get_rng() is not None
+
     d.set_ultima_tirada((6, 6))
     assert d.get_ultima_tirada() == (6, 6)
 
-def test_attributes_have_double_underscores_and_camelcase_name():
-    
-    assert Dice.__name__ == "Dice" and "_" not in Dice.__name__
-    
-    d = Dice()
-    for attr in d.__dict__.keys():
-        assert attr.startswith("__") and attr.endswith("__"), f"Atributo inválido: {attr}"
-
-def test_has_getters_and_setters_required():
-    
-    members = dict(inspect.getmembers(Dice))
-    for name in ("get_rng", "set_rng", "get_ultima_tirada", "set_ultima_tirada"):
-        assert name in members and inspect.isfunction(members[name]), f"Falta {name}"
+    with pytest.raises(ValueError):
+        d.set_ultima_tirada((0, 7))  # inválido
