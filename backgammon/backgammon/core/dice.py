@@ -9,7 +9,7 @@ class Dice:
     """
 
     def __init__(self, rng: Optional[random.Random] = None) -> None:
-        # Atributos internos con doble underscore 
+        # Atributos internos con doble underscore (encapsulación)
         self.__rng__ = rng or random.Random()
         self.__ultima_tirada__: Tuple[int, int] = (0, 0)
 
@@ -39,7 +39,6 @@ class Dice:
         d1, d2 = self.__ultima_tirada__
         return [d1, d2, d1, d2] if d1 == d2 else [d1, d2]
 
-
     def get_rng(self) -> random.Random:
         """Devuelve el generador aleatorio actual"""
         return self.__rng__
@@ -58,11 +57,13 @@ class Dice:
         """
         if isinstance(tirada, list):
             tirada = tuple(tirada)
-        if (not isinstance(tirada, tuple) or len(tirada) != 2 or
-                any(not isinstance(x, int) or x < 1 or x > 6 for x in tirada)):
+        if (
+            not isinstance(tirada, tuple)
+            or len(tirada) != 2
+            or any(not isinstance(x, int) or x < 1 or x > 6 for x in tirada)
+        ):
             raise ValueError("Tirada inválida: debe ser (d1, d2) con valores entre 1 y 6")
         self.__ultima_tirada__ = tirada
-
 
     def __repr__(self) -> str:
         d1, d2 = self.__ultima_tirada__
