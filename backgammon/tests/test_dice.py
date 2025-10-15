@@ -35,3 +35,32 @@ def test_has_getters_and_setters_required():
     members = dict(inspect.getmembers(Dice))
     for name in ("get_rng", "set_rng", "get_ultima_tirada", "set_ultima_tirada"):
         assert name in members and inspect.isfunction(members[name]), f"Falta {name}"
+
+
+
+import pytest
+from backgammon.backgammon.core.dice import Dice
+
+def test_is_double_true_false():
+    d = Dice.from_seed(1)
+    d.set_ultima_tirada((4, 4))
+    assert d.is_double()
+    d.set_ultima_tirada((3, 5))
+    assert not d.is_double()
+
+def test_moves_from_roll_double_and_normal():
+    d = Dice()
+    d.set_ultima_tirada((2, 2))
+    assert d.moves_from_roll() == [2, 2, 2, 2]
+    d.set_ultima_tirada((1, 3))
+    assert d.moves_from_roll() == [1, 3]
+
+def test_repr_str_and_validation():
+    d = Dice()
+    d.set_ultima_tirada((6, 2))
+    assert "Dice" in repr(d)
+    assert "Tirada actual" in str(d)
+
+    # Prueba de validación en set_ultima_tirada
+    with pytest.raises(ValueError):
+        d.set_ultima_tirada((0, 7))
