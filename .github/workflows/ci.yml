@@ -1,4 +1,5 @@
 ﻿name: CI
+
 on:
   push:
   pull_request:
@@ -6,6 +7,7 @@ on:
 jobs:
   test-and-lint:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -29,3 +31,48 @@ jobs:
         run: |
           pytest -q --maxfail=1 --disable-warnings \
             --cov=backgammon --cov-report=term-missing || true
+
+      - name: Run tests with coverage
+        run: |
+          pip install pytest pytest-cov
+          pytest -q --cov=backgammon --cov-report=term-missing --cov-report=xml:coverage.xml | tee coverage_report.txt
+
+      - name: Run Pylint
+        run: |
+          pip install pylint
+          pylint --rcfile=.pylintrc backgammon | tee pylint_report.txt || true
+
+      - name: Generate REPORTS.md
+        run: |
+          python - << 'PY'
+          from pathlib import Path
+          COV_TXT = Path("coverage_report.txt")
+          LINT_TXT = Path("pylint_report.txt")
+          OUT = Path("REPORTS.md")
+          def read(p: Path) -> str:
+              return p.read_text(encoding="utf-8") if p.exists() else f"(no encontrado: {p.name})"
+          content = f"""# Reportes automáticos
+
+          ## Coverage (pytest)
+          ```text
+          {read(COV_TXT)}
+          ```
+
+          ## Pylint
+          ```text
+          {read(LINT_TXT)}
+          ```
+          """
+          OUT.write_text(content, encoding="utf-8")
+          print(f"Escrito {OUT}")
+          PY
+
+      - name: Upload artifacts (coverage + lint + reports)
+        uses: actions/upload-artifact@v4
+        with:
+          name: reports
+          path: |
+            coverage.xml
+            coverage_report.txt
+            pylint_report.txt
+            REPORTS.md
