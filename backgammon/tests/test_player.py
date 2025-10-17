@@ -1,5 +1,5 @@
 import pytest
-from backgammon.backgammon.core.player import Player
+from backgammon.core.player import Player
 
 
 def test_player_inicializacion():
@@ -73,11 +73,13 @@ def test_player_sumar_puntos_y_perder_ficha_funciona():
     p.perder_ficha()
     assert p.get_fichas() == 14
 
+
 def test_player_perder_ficha_error_si_no_hay():
     p = Player("Franco")
     p.set_fichas(0)
     with pytest.raises(ValueError):
         p.perder_ficha()
+
 
 def test_player_reset_vuelve_a_estado_inicial():
     p = Player("Cami")
@@ -86,6 +88,7 @@ def test_player_reset_vuelve_a_estado_inicial():
     p.reset()
     assert p.get_fichas() == 15
     assert p.get_puntos() == 0
+
 
 def test_player_to_from_dict_reconstruye_correctamente():
     p = Player("Valen")
@@ -96,6 +99,7 @@ def test_player_to_from_dict_reconstruye_correctamente():
     assert nuevo.get_nombre() == "Valen"
     assert nuevo.get_fichas() == 10
     assert nuevo.get_puntos() == 7
+
 
 def test_player_eq_y_hash_basados_en_nombre():
     p1 = Player("Lucas")

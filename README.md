@@ -1,4 +1,4 @@
-﻿# Backgammon — Computación 2025
+# Backgammon — Computación 2025
 
-Agustin Vera 
 
+Agustin Vera

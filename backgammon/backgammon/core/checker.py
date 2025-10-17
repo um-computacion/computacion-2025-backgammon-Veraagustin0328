@@ -5,12 +5,6 @@ from typing import Optional, Dict, Any
 class Checker:
     """
     Ficha del tablero.
-    
-    Aplica principios SOLID:
-    - SRP: Solo maneja el estado y posición de una ficha
-    - OCP: Puede extenderse mediante herencia
-    - LSP: Puede ser sustituida por subclases
-    
     position:
         - None  -> sin ubicar (o desconocido)
         - -1    -> en la barra (BAR)
@@ -25,11 +19,6 @@ class Checker:
     def __init__(self, player: Any, color: str = "blanco", position: Optional[int] = None) -> None:
         """
         Inicializa una ficha.
-        
-        Args:
-            player: Jugador dueño de la ficha
-            color: Color de la ficha (blanco/negro)
-            position: Posición inicial (None por defecto)
         """
         self.__player: Any = player
         self.__color: str = str(color)
@@ -52,12 +41,6 @@ class Checker:
     def set_position(self, pos: Optional[int]) -> None:
         """
         Setea la posición con validación de rango.
-        
-        Args:
-            pos: Nueva posición (None, BAR, OFF, o 1-24)
-            
-        Raises:
-            ValueError: Si la posición es inválida
         """
         if pos is None:
             self.__position = None

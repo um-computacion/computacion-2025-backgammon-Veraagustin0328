@@ -14,12 +14,7 @@ class BaseBoard(ABC):
 
 class Board(BaseBoard):
     """
-    Tablero estándar: 24 puntos + bar + off.
-    Aplica principios SOLID:
-    - SRP: Solo maneja el estado del tablero
-    - OCP: Extensible mediante herencia de BaseBoard
-    - LSP: Puede ser sustituida por otras implementaciones de BaseBoard
-    - DIP: No depende de implementaciones concretas
+    Tablero estándar: 24 puntos + bar + off
     """
 
     def __init__(self) -> None:
@@ -48,10 +43,11 @@ class Board(BaseBoard):
         return self.__off.copy()
 
     def get_estado(self) -> List[Any]:
-        estado = [None]  # Cambiar [[]] por [None]
+        """Devuelve el estado del tablero con índices 1-24"""
+        estado = [None]
         for punto in self.__points:
             if len(punto) == 0:
-                estado.append(None)  # Cambiar [] por None
+                estado.append(None)
             else:
                 estado.append(punto[-1].get_nombre())
         return estado
@@ -66,13 +62,6 @@ class Board(BaseBoard):
     def colocar_ficha(self, player: Any, posicion: int) -> None:
         """
         Coloca una ficha del jugador en la posición indicada (1-24).
-        
-        Args:
-            player: Jugador que coloca la ficha
-            posicion: Posición donde colocar (1-24)
-            
-        Raises:
-            ValueError: Si la posición es inválida
         """
         if not (1 <= posicion <= 24):
             raise ValueError("La posición debe estar entre 1 y 24")
@@ -82,15 +71,6 @@ class Board(BaseBoard):
     def quitar_ficha(self, posicion: int) -> Optional[Any]:
         """
         Quita una ficha de la posición indicada (1-24).
-        
-        Args:
-            posicion: Posición de donde quitar la ficha (1-24)
-            
-        Returns:
-            El jugador dueño de la ficha removida, o None si no había fichas
-            
-        Raises:
-            ValueError: Si la posición es inválida
         """
         if not (1 <= posicion <= 24):
             raise ValueError("La posición debe estar entre 1 y 24")
@@ -102,13 +82,6 @@ class Board(BaseBoard):
     def mover_ficha(self, desde: int, hasta: int) -> None:
         """
         Mueve una ficha desde una posición a otra.
-        
-        Args:
-            desde: Posición origen (1-24)
-            hasta: Posición destino (1-24)
-            
-        Raises:
-            ValueError: Si las posiciones son inválidas o no hay ficha para mover
         """
         if not (1 <= desde <= 24):
             raise ValueError("La posición 'desde' debe estar entre 1 y 24")
