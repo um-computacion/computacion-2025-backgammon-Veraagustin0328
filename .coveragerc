@@ -1,0 +1,13 @@
+[run]
+branch = True
+source = backgammon
+omit =
+    backgammon/backgammon/core/player.py
+    **/__init__.py
+
+[report]
+show_missing = True
+skip_empty = True
+omit =
+    backgammon/backgammon/core/player.py
+    **/__init__.py
