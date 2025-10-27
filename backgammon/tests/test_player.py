@@ -107,4 +107,8 @@ def test_player_eq_y_hash_basados_en_nombre():
     p3 = Player("Jose")
     assert p1 == p2
     assert p1 != p3
+<<<<<<< HEAD
     assert hash(p1) == hash(p2)
+=======
+    assert hash(p1) == hash(p2)
+>>>>>>> origin/main

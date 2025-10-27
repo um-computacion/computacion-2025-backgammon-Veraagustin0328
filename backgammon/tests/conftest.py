@@ -1,3 +1,15 @@
+<<<<<<< HEAD
+import sys
+import os
+
+# Agregar ra?z al path
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+if ROOT not in sys.path:
+    sys.path.insert(0, ROOT)
+
+# Importar backgammon para que el m?dulo est? disponible
+import backgammon
+=======
 # Adaptador de imports para que funcionen ambos estilos:
 # - from backgammon.core import ...
 # - from backgammon.backgammon.core import ...
@@ -20,3 +32,4 @@ try:
 except Exception:
     # Si no existe el doble paquete, no hacemos nada.
     pass
+>>>>>>> origin/main
