@@ -124,9 +124,15 @@ def test_game_to_from_dict_redondeo_completo():
 
 
 import pytest
+<<<<<<< HEAD
 from backgammon.core.game import Game
 from backgammon.core.player import Player
 from backgammon.core.dice import Dice
+=======
+from backgammon.backgammon.core.game import Game
+from backgammon.backgammon.core.player import Player
+from backgammon.backgammon.core.dice import Dice
+>>>>>>> origin/main
 
 
 def test_game_repr_y_str_mencionan_jugador_y_marcador():
@@ -170,4 +176,8 @@ def test_game_to_from_dict_con_historial_y_score():
     assert g2.get_current_index() == g.get_current_index()
     assert isinstance(g2.get_history(), list) and len(g2.get_history()) >= 1
     s1, s2 = g.get_score(), g2.get_score()
+<<<<<<< HEAD
     assert s2.get("A", 0) == s1.get("A", 0) and s2.get("B", 0) == s1.get("B", 0)
+=======
+    assert s2.get("A", 0) == s1.get("A", 0) and s2.get("B", 0) == s1.get("B", 0)
+>>>>>>> origin/main

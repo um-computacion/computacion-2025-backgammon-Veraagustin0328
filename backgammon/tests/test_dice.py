@@ -1,7 +1,11 @@
 import random
 import inspect
 import pytest
+<<<<<<< HEAD
 from backgammon.core.dice import Dice
+=======
+from backgammon.backgammon.core.dice import Dice
+>>>>>>> origin/main
 
 
 def test_dice_deterministic_with_seed():
@@ -78,8 +82,12 @@ def test_repr_str_and_validation():
 import random
 import inspect
 import pytest
+<<<<<<< HEAD
 from backgammon.core.dice import Dice
 
+=======
+from backgammon.backgammon.core.dice import Dice
+>>>>>>> origin/main
 
 
 def test_dice_deterministic_with_seed():
