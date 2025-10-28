@@ -1,9 +1,10 @@
 import sys
 import pygame
 from backgammon.core.game import Game
-from backgammon.core.board import BoardWithSetup
+from backgammon.core.board import Board
 from backgammon.core.player import Player
 from backgammon.core.dice import Dice
+
 
 """
 Interfaz gráfica de Backgammon con Pygame.
@@ -278,17 +279,31 @@ def main():
     clock = pygame.time.Clock()
     font = pygame.font.SysFont(None, 24)
     
-    # Crear juego con posición inicial
+    # Crear juego con posición simple para testing
     p1 = Player("Blancas", color="blanco")
     p2 = Player("Negras", color="negro")
-    board = BoardWithSetup()
-    board.setup_initial_position(p1, p2)
+    board = Board()
     dice = Dice()
+    
+    # Posición simple de prueba (en lugar de setup completo)
+    # Blancas (mueven hacia arriba: 1→24)
+    board.colocar_ficha(p1, 1)
+    board.colocar_ficha(p1, 1)
+    board.colocar_ficha(p1, 6)
+    board.colocar_ficha(p1, 8)
+    
+    # Negras (mueven hacia abajo: 24→1)
+    board.colocar_ficha(p2, 24)
+    board.colocar_ficha(p2, 24)
+    board.colocar_ficha(p2, 19)
+    board.colocar_ficha(p2, 17)
     
     game = Game(p1, p2, board=board, dice=dice)
     
-    dice_values = None
+    dice_values = []
+    available_moves = []
     selected_point = None
+    message = "Tirá los dados para empezar"
     
     running = True
     while running:
@@ -299,6 +314,13 @@ def main():
             elif event.type == pygame.KEYDOWN:
                 if event.key in (pygame.K_ESCAPE, pygame.K_q):
                     running = False
+                elif event.key == pygame.K_SPACE:
+                    # Atajo: tirar dados con espacio
+                    if not dice_values:
+                        dice_values = game.roll()
+                        available_moves = dice_values.copy()
+                        selected_point = None
+                        message = f"Dados: {dice_values}. Movimientos disponibles: {available_moves}"
             
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:  # Click izquierdo
@@ -310,16 +332,68 @@ def main():
                     )
                     
                     if button_rect.collidepoint(event.pos):
-                        # Tirar dados
-                        dice_values = game.roll()
-                        print(f"Dados: {dice_values}")
+                        # Tirar dados solo si no hay movimientos pendientes
+                        if not dice_values:
+                            dice_values = game.roll()
+                            available_moves = dice_values.copy()
+                            selected_point = None
+                            message = f"Dados: {dice_values}. Elegí una ficha para mover"
+                        else:
+                            message = "Terminá de usar los dados primero"
                     
                     else:
                         # Verificar click en punto
-                        point = get_clicked_point(event.pos)
-                        if point:
-                            print(f"Clickeaste el punto {point}")
-                            selected_point = point
+                        clicked_point = get_clicked_point(event.pos)
+                        
+                        if clicked_point and dice_values:
+                            current_player = game.get_current_player()
+                            board = game.get_board()
+                            
+                            # Si no hay punto seleccionado, seleccionar origen
+                            if selected_point is None:
+                                # Verificar que el punto tenga fichas del jugador actual
+                                if board.point_count(clicked_point) > 0:
+                                    top_checker = board.get_top_checker(clicked_point)
+                                    if top_checker and top_checker.get_color() == current_player.get_color():
+                                        selected_point = clicked_point
+                                        message = f"Ficha seleccionada en punto {clicked_point}. Elegí destino"
+                                    else:
+                                        message = "Esa ficha no es tuya"
+                                else:
+                                    message = "Ese punto está vacío"
+                            
+                            # Si ya hay punto seleccionado, intentar mover
+                            else:
+                                # Calcular distancia del movimiento
+                                if current_player.get_color() == "blanco":
+                                    distance = clicked_point - selected_point
+                                else:
+                                    distance = selected_point - clicked_point
+                                
+                                # Verificar si el movimiento es válido (debe coincidir con un dado)
+                                if distance in available_moves:
+                                    try:
+                                        # Intentar mover la ficha
+                                        board.mover_ficha(selected_point, clicked_point)
+                                        
+                                        # Remover el dado usado
+                                        available_moves.remove(distance)
+                                        
+                                        message = f"Moviste de {selected_point} a {clicked_point}"
+                                        selected_point = None
+                                        
+                                        # Si no quedan dados, cambiar turno
+                                        if not available_moves:
+                                            game.next_turn()
+                                            dice_values = []
+                                            message = f"Turno de {game.get_current_player().get_nombre()}"
+                                    
+                                    except Exception as e:
+                                        message = f"Movimiento inválido: {str(e)}"
+                                        selected_point = None
+                                else:
+                                    message = f"Movimiento de {distance} no disponible. Disponibles: {available_moves}"
+                                    selected_point = None
         
         # Renderizar
         draw_board(screen)
@@ -328,7 +402,7 @@ def main():
         draw_bear_off(screen, game.get_board())
         
         if dice_values:
-            draw_dice(screen, dice_values, 
+            draw_dice(screen, available_moves, 
                      BOARD_MARGIN + 12 * POINT_WIDTH + BAR_WIDTH + 30,
                      HEIGHT // 2)
         
@@ -339,6 +413,14 @@ def main():
             x, y = get_point_position(selected_point)
             highlight_rect = pygame.Rect(x, y, POINT_WIDTH, POINT_HEIGHT)
             pygame.draw.rect(screen, (255, 255, 0), highlight_rect, 3)
+        
+        # Mostrar mensaje
+        msg_text = font.render(message, True, BLACK)
+        screen.blit(msg_text, (BOARD_MARGIN, HEIGHT - 30))
+        
+        # Instrucciones
+        instructions = font.render("ESPACIO = tirar dados | Click = seleccionar/mover", True, BLACK)
+        screen.blit(instructions, (BOARD_MARGIN, 20))
         
         pygame.display.flip()
         clock.tick(FPS)
