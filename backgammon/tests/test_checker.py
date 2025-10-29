@@ -1,11 +1,7 @@
 import pytest
-<<<<<<< HEAD
 from backgammon.core.checker import Checker
 from backgammon.core.player import Player
-=======
-from backgammon.backgammon.core.checker import Checker
-from backgammon.backgammon.core.player import Player
->>>>>>> origin/main
+
 
 
 def test_checker_inicializacion():
@@ -35,12 +31,6 @@ def test_checker_repr_y_color():
     c = Checker(p)
     assert str(p.get_nombre()) in repr(c)
 
-
-<<<<<<< HEAD
-
-=======
-# ========== TESTS ADICIONALES PARA AUMENTAR COBERTURA ==========
->>>>>>> origin/main
 
 def test_checker_con_color_custom():
     """Test de inicialización con color específico"""
@@ -699,10 +689,5 @@ def test_checker_color_conversion():
     
     # Color vacío
     c2 = Checker(p, color="")
-<<<<<<< HEAD
     assert c2.get_color() == ""
-=======
-    assert c2.get_color() == ""
-    
-    
->>>>>>> origin/main
+
