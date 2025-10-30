@@ -1,430 +1,373 @@
+"""
+Módulo que define el tablero de Backgammon.
+"""
+
 from __future__ import annotations
-from abc import ABC, abstractmethod
-from typing import Dict, List, Any, Optional
+from typing import List, Optional, TYPE_CHECKING
 
-class BaseBoard(ABC):
+if TYPE_CHECKING:
+    from .player import Player
+    from .checker import Checker
+
+
+class Board:
     """
-    Interfaz base para tableros de Backgammon (OCP).
-    
-    Permite extender con nuevos tipos de tableros sin modificar el código existente.
-    """
-
-    @abstractmethod
-    def initialize_points(self) -> List[list]:
-        """Devuelve la estructura inicial de puntos del tablero."""
-        raise NotImplementedError
-
-    @abstractmethod
-    def get_points(self) -> List[list]:
-        """Devuelve los puntos del tablero."""
-        raise NotImplementedError
-
-    @abstractmethod
-    def reset(self) -> None:
-        """Reinicia el tablero a su estado inicial."""
-        raise NotImplementedError
-
-
-class BarManager:
-    """
-    SRP: Gestiona únicamente las operaciones de la barra.
+    Representa el tablero de Backgammon con 24 puntos.
     """
 
     def __init__(self) -> None:
-        self.__bar: Dict[str, int] = {"blanco": 0, "negro": 0}
-
-    def add_to_bar(self, color: str) -> None:
-        """Agrega una ficha del color dado a la barra."""
-        if color not in ["blanco", "negro"]:
-            raise ValueError(f"Color inválido: {color}")
-        self.__bar[color] += 1
-
-    def remove_from_bar(self, color: str) -> bool:
         """
-        Quita una ficha del color dado de la barra.
-        
-        Returns:
-            True si se removió exitosamente, False si no había fichas.
+        Inicializa un tablero vacío con 24 puntos.
+        Puntos numerados del 1 al 24.
         """
-        if color not in ["blanco", "negro"]:
-            raise ValueError(f"Color inválido: {color}")
-        
-        if self.__bar[color] > 0:
-            self.__bar[color] -= 1
-            return True
-        return False
+        # 25 elementos: índice 0 no se usa, puntos 1-24
+        self.points: List[List[Checker]] = [[] for _ in range(25)]
+        self.bar: List[Checker] = []  # Fichas capturadas
+        self.off: dict[str, int] = {"blanco": 0, "negro": 0}  # Fichas sacadas
 
-    def get_count(self, color: str) -> int:
-        """Retorna la cantidad de fichas del color en la barra."""
-        if color not in ["blanco", "negro"]:
-            raise ValueError(f"Color inválido: {color}")
-        return self.__bar[color]
-
-    def has_checkers(self, color: str) -> bool:
-        """Verifica si hay fichas del color en la barra."""
-        return self.get_count(color) > 0
-
-    def get_state(self) -> Dict[str, int]:
-        """Retorna una copia del estado de la barra."""
-        return self.__bar.copy()
-
-    def reset(self) -> None:
-        """Reinicia la barra a estado vacío."""
-        self.__bar = {"blanco": 0, "negro": 0}
-
-
-class BearOffManager:
-    """
-    SRP: Gestiona únicamente las operaciones de bear off.
-    """
-
-    def __init__(self) -> None:
-        self.__off: Dict[str, int] = {"blanco": 0, "negro": 0}
-
-    def bear_off(self, color: str) -> None:
-        """Saca una ficha del color dado del tablero."""
-        if color not in ["blanco", "negro"]:
-            raise ValueError(f"Color inválido: {color}")
-        self.__off[color] += 1
-
-    def get_count(self, color: str) -> int:
-        """Retorna la cantidad de fichas del color fuera del juego."""
-        if color not in ["blanco", "negro"]:
-            raise ValueError(f"Color inválido: {color}")
-        return self.__off[color]
-
-    def has_won(self, color: str) -> bool:
-        """Verifica si el jugador del color ganó (15 fichas fuera)."""
-        return self.get_count(color) == 15
-
-    def get_state(self) -> Dict[str, int]:
-        """Retorna una copia del estado de bear off."""
-        return self.__off.copy()
-
-    def reset(self) -> None:
-        """Reinicia el bear off a estado vacío."""
-        self.__off = {"blanco": 0, "negro": 0}
-
-
-
-
-class Board(BaseBoard):
-    """
-    Tablero estándar de Backgammon con 24 puntos + barra + bear off.
-    """
-
-    def __init__(self) -> None:
-        """Inicializa el tablero con sus componentes."""
-        self.__points: List[list] = self.initialize_points()
-        self.__bar_manager = BarManager()
-        self.__bear_off_manager = BearOffManager()
-
-
-    def initialize_points(self) -> List[list]:
+    def colocar_ficha(self, player: Player, point: int) -> None:
         """
-        Inicializa 24 puntos vacíos.
-        
-        Para tablero con posición inicial, heredar y override este método.
-        """
-        return [[] for _ in range(24)]
-
-    def get_points(self) -> List[list]:
-        """Retorna una copia de los puntos del tablero."""
-        return [point.copy() for point in self.__points]
-
-    def reset(self) -> None:
-        """Reinicia el tablero a su estado inicial."""
-        self.__points = self.initialize_points()
-        self.__bar_manager.reset()
-        self.__bear_off_manager.reset()
-
-
-    def point_count(self, position: int) -> int:
-        """
-        Retorna la cantidad de fichas en una posición (1-24).
+        Coloca una ficha del jugador en un punto específico.
         
         Args:
-            position: Posición del tablero (1-24)
-            
-        Returns:
-            Cantidad de fichas en esa posición
-            
+            player: Jugador dueño de la ficha
+            point: Número del punto (1-24)
+        
         Raises:
-            ValueError: Si la posición está fuera del rango válido
+            ValueError: Si el punto está fuera del rango válido
         """
-        self._validate_position(position)
-        return len(self.__points[position - 1])
+        if not (1 <= point <= 24):
+            raise ValueError(f"Punto {point} fuera de rango (1-24)")
+        
+        from .checker import Checker
+        checker = Checker(player=player, color=player.get_color())
+        self.points[point].append(checker)
 
-    def colocar_ficha(self, player: Any, position: int) -> None:
+    def mover_ficha(self, origin: int, dest: int) -> None:
         """
-        Coloca una ficha del jugador en la posición indicada.
+        Mueve una ficha de un punto a otro.
         
         Args:
-            player: Objeto jugador/ficha a colocar
-            position: Posición donde colocar (1-24)
-            
+            origin: Punto de origen (1-24)
+            dest: Punto de destino (1-24)
+        
         Raises:
-            ValueError: Si la posición es inválida
+            ValueError: Si el movimiento es inválido
         """
-        self._validate_position(position)
-        self.__points[position - 1].append(player)
+        if not (1 <= origin <= 24 and 1 <= dest <= 24):
+            raise ValueError("Puntos fuera de rango")
+        
+        if not self.points[origin]:
+            raise ValueError(f"No hay fichas en el punto {origin}")
+        
+        # Sacar ficha del origen
+        checker = self.points[origin].pop()
+        
+        # Colocar en destino
+        self.points[dest].append(checker)
 
-    def quitar_ficha(self, position: int) -> Optional[Any]:
+    def point_count(self, point: int) -> int:
         """
-        Quita la última ficha de la posición indicada.
+        Cuenta las fichas en un punto.
         
         Args:
-            position: Posición de donde quitar (1-24)
-            
-        Returns:
-            La ficha removida, o None si no había fichas
-            
-        Raises:
-            ValueError: Si la posición es inválida
-        """
-        self._validate_position(position)
-        idx = position - 1
+            point: Número del punto (1-24)
         
-        if len(self.__points[idx]) == 0:
+        Returns:
+            Cantidad de fichas en el punto
+        """
+        if not (1 <= point <= 24):
+            return 0
+        return len(self.points[point])
+
+    def get_top_checker(self, point: int) -> Optional[Checker]:
+        """
+        Obtiene la ficha superior de un punto.
+        
+        Args:
+            point: Número del punto (1-24)
+        
+        Returns:
+            La ficha superior o None si el punto está vacío
+        """
+        if not (1 <= point <= 24):
             return None
         
-        return self.__points[idx].pop()
-
-    def mover_ficha(self, from_pos: int, to_pos: int) -> Optional[Any]:
-        """
-        Mueve una ficha de una posición a otra.
-        
-        Args:
-            from_pos: Posición origen (1-24)
-            to_pos: Posición destino (1-24)
-            
-        Returns:
-            Ficha capturada si hubo captura, None en caso contrario
-            
-        Raises:
-            ValueError: Si las posiciones son inválidas o no hay fichas en origen
-        """
-        self._validate_position(from_pos)
-        self._validate_position(to_pos)
-        
-        idx_from = from_pos - 1
-        idx_to = to_pos - 1
-        
-        if len(self.__points[idx_from]) == 0:
-            raise ValueError(f"No hay fichas en la posición {from_pos}")
-        
-        # Quitar ficha de origen
-        ficha = self.__points[idx_from].pop()
-        
-        # Verificar si hay captura (ficha solitaria del oponente)
-        captured = None
-        if len(self.__points[idx_to]) == 1:
-            opponent_checker = self.__points[idx_to][0]
-            # Verificar que sea del oponente (si las fichas tienen color)
-            if hasattr(ficha, 'get_color') and hasattr(opponent_checker, 'get_color'):
-                if ficha.get_color() != opponent_checker.get_color():
-                    captured = self.__points[idx_to].pop()
-                    # Agregar a la barra
-                    self.__bar_manager.add_to_bar(captured.get_color())
-        
-        # Colocar ficha en destino
-        self.__points[idx_to].append(ficha)
-        
-        return captured
-
-    def get_top_checker(self, position: int) -> Optional[Any]:
-        """
-        Retorna la ficha superior de una posición sin removerla.
-        
-        Args:
-            position: Posición a consultar (1-24)
-            
-        Returns:
-            La ficha superior, o None si está vacío
-        """
-        self._validate_position(position)
-        idx = position - 1
-        
-        if len(self.__points[idx]) == 0:
+        if not self.points[point]:
             return None
         
-        return self.__points[idx][-1]
-
-
-
-    def add_to_bar(self, color: str) -> None:
-        """Agrega una ficha del color a la barra."""
-        self.__bar_manager.add_to_bar(color)
-
-    def remove_from_bar(self, color: str) -> bool:
-        """Remueve una ficha del color de la barra."""
-        return self.__bar_manager.remove_from_bar(color)
+        return self.points[point][-1]
 
     def get_bar_count(self, color: str) -> int:
-        """Retorna cantidad de fichas del color en la barra."""
-        return self.__bar_manager.get_count(color)
-
-    def has_checkers_on_bar(self, color: str) -> bool:
-        """Verifica si hay fichas del color en la barra."""
-        return self.__bar_manager.has_checkers(color)
-
- 
-
-    def bear_off_checker(self, color: str) -> None:
-        """Saca una ficha del color del tablero."""
-        self.__bear_off_manager.bear_off(color)
-
-    def get_bear_off_count(self, color: str) -> int:
-        """Retorna cantidad de fichas del color fuera del juego."""
-        return self.__bear_off_manager.get_count(color)
-
-    def has_won(self, color: str) -> bool:
-        """Verifica si el jugador del color ganó."""
-        return self.__bear_off_manager.has_won(color)
-
-  
-
-    def get_estado(self) -> List[Any]:
         """
-        Retorna el estado del tablero con índices 1-24.
-        
-        Returns:
-            Lista donde el índice 0 es None y del 1-24 tiene el nombre 
-            del último checker en cada punto (o None si está vacío)
-        """
-        estado = [None]
-        for punto in self.__points:
-            if len(punto) == 0:
-                estado.append(None)
-            else:
-                if hasattr(punto[-1], 'get_nombre'):
-                    estado.append(punto[-1].get_nombre())
-                else:
-                    estado.append(str(punto[-1]))
-        return estado
-
-    def get_full_state(self) -> Dict[str, Any]:
-        """
-        Retorna el estado completo del tablero.
-        
-        Returns:
-            Diccionario con points, bar y off
-        """
-        return {
-            "points": self.get_points(),
-            "bar": self.__bar_manager.get_state(),
-            "off": self.__bear_off_manager.get_state()
-        }
-
-
-
-    @property
-    def points(self) -> List[list]:
-        """Property para acceso directo a los puntos."""
-        return self.__points
-
-    @property
-    def bar(self) -> Dict[str, int]:
-        """Property para acceso al estado de la barra."""
-        return self.__bar_manager.get_state()
-
-    @property
-    def off(self) -> Dict[str, int]:
-        """Property para acceso al estado de bear off."""
-        return self.__bear_off_manager.get_state()
-
-   
-
-    def _validate_position(self, position: int) -> None:
-        """
-        Valida que una posición esté en el rango válido (1-24).
+        Cuenta las fichas de un color en la barra.
         
         Args:
-            position: Posición a validar
-            
-        Raises:
-            ValueError: Si la posición está fuera del rango
+            color: Color de las fichas ('blanco' o 'negro')
+        
+        Returns:
+            Cantidad de fichas en la barra
         """
-        if not (1 <= position <= 24):
-            raise ValueError(f"La posición debe estar entre 1 y 24, recibido: {position}")
+        return sum(1 for c in self.bar if c.get_color() == color)
 
+    def get_off_count(self, color: str) -> int:
+        """
+        Obtiene la cantidad de fichas sacadas del tablero.
+        
+        Args:
+            color: Color de las fichas ('blanco' o 'negro')
+        
+        Returns:
+            Cantidad de fichas sacadas
+        """
+        return self.off.get(color, 0)
 
+    def is_empty(self, point: int) -> bool:
+        """
+        Verifica si un punto está vacío.
+        
+        Args:
+            point: Número del punto (1-24)
+        
+        Returns:
+            True si el punto está vacío
+        """
+        if not (1 <= point <= 24):
+            return True
+        return len(self.points[point]) == 0
 
-    def __repr__(self) -> str:
-        """Representación string del tablero."""
-        total_checkers = sum(len(point) for point in self.__points)
-        return (f"Board(points=24, checkers={total_checkers}, "
-                f"bar={self.bar}, off={self.off})")
+    def get_point_color(self, point: int) -> Optional[str]:
+        """
+        Obtiene el color de las fichas en un punto.
+        
+        Args:
+            point: Número del punto (1-24)
+        
+        Returns:
+            Color de las fichas o None si está vacío
+        """
+        if self.is_empty(point):
+            return None
+        
+        top = self.get_top_checker(point)
+        return top.get_color() if top else None
+
+    def can_place_checker(self, point: int, color: str) -> bool:
+        """
+        Verifica si se puede colocar una ficha en un punto.
+        
+        Args:
+            point: Número del punto (1-24)
+            color: Color de la ficha a colocar
+        
+        Returns:
+            True si se puede colocar
+        """
+        if not (1 <= point <= 24):
+            return False
+        
+        if self.is_empty(point):
+            return True
+        
+        point_color = self.get_point_color(point)
+        if point_color == color:
+            return True
+        
+        # Solo se puede capturar si hay una sola ficha del oponente
+        return self.point_count(point) == 1
+
+    def capture_checker(self, checker: Checker) -> None:
+        """
+        Captura una ficha y la coloca en la barra.
+        
+        Args:
+            checker: Ficha a capturar
+        """
+        self.bar.append(checker)
+
+    def remove_from_bar(self, color: str) -> Optional[Checker]:
+        """
+        Saca una ficha de la barra.
+        
+        Args:
+            color: Color de la ficha a sacar
+        
+        Returns:
+            La ficha sacada o None si no hay fichas de ese color
+        """
+        for i, checker in enumerate(self.bar):
+            if checker.get_color() == color:
+                return self.bar.pop(i)
+        return None
+
+    def bear_off(self, color: str) -> None:
+        """
+        Saca una ficha del tablero (bear off).
+        
+        Args:
+            color: Color de la ficha a sacar
+        """
+        self.off[color] = self.off.get(color, 0) + 1
+
+    def get_all_checkers(self, color: str) -> List[tuple[int, int]]:
+        """
+        Obtiene todas las posiciones de fichas de un color.
+        
+        Args:
+            color: Color de las fichas
+        
+        Returns:
+            Lista de tuplas (punto, cantidad)
+        """
+        positions = []
+        for point in range(1, 25):
+            if self.get_point_color(point) == color:
+                positions.append((point, self.point_count(point)))
+        return positions
+
+    def is_in_home_board(self, point: int, color: str) -> bool:
+        """
+        Verifica si un punto está en el home board del jugador.
+        
+        Args:
+            point: Número del punto
+            color: Color del jugador
+        
+        Returns:
+            True si el punto está en el home board
+        """
+        if color == "blanco":
+            return 19 <= point <= 24
+        else:
+            return 1 <= point <= 6
+
+    def all_in_home_board(self, color: str) -> bool:
+        """
+        Verifica si todas las fichas de un color están en su home board.
+        
+        Args:
+            color: Color del jugador
+        
+        Returns:
+            True si todas las fichas están en home board
+        """
+        if color == "blanco":
+            home_range = range(19, 25)
+        else:
+            home_range = range(1, 7)
+        
+        # Verificar que no haya fichas fuera del home board
+        for point in range(1, 25):
+            if point not in home_range:
+                if self.get_point_color(point) == color:
+                    return False
+        
+        # Verificar que no haya fichas en la barra
+        if self.get_bar_count(color) > 0:
+            return False
+        
+        return True
+
+    def clear(self) -> None:
+        """Limpia el tablero completamente."""
+        self.points = [[] for _ in range(25)]
+        self.bar = []
+        self.off = {"blanco": 0, "negro": 0}
 
     def __str__(self) -> str:
-        """String legible del tablero."""
-        lines = ["=== BOARD STATE ==="]
-        for i, point in enumerate(self.__points, start=1):
-            lines.append(f"Point {i:2d}: {len(point)} checkers")
-        lines.append(f"Bar: {self.bar}")
-        lines.append(f"Off: {self.off}")
+        """Representación en string del tablero."""
+        lines = []
+        lines.append("=== TABLERO DE BACKGAMMON ===")
+        
+        # Mostrar puntos 13-24
+        top_line = "Arriba (13-24): "
+        for point in range(13, 25):
+            count = self.point_count(point)
+            color = self.get_point_color(point)
+            if count > 0:
+                symbol = "●" if color == "blanco" else "○"
+                top_line += f"[{point}:{symbol}{count}] "
+        lines.append(top_line)
+        
+        # Barra y off
+        lines.append(f"Bar: Blancas={self.get_bar_count('blanco')}, Negras={self.get_bar_count('negro')}")
+        lines.append(f"Off: Blancas={self.off.get('blanco', 0)}, Negras={self.off.get('negro', 0)}")
+        
+        # Mostrar puntos 12-1
+        bottom_line = "Abajo (12-1):  "
+        for point in range(12, 0, -1):
+            count = self.point_count(point)
+            color = self.get_point_color(point)
+            if count > 0:
+                symbol = "●" if color == "blanco" else "○"
+                bottom_line += f"[{point}:{symbol}{count}] "
+        lines.append(bottom_line)
+        
         return "\n".join(lines)
 
-
+    def __repr__(self) -> str:
+        """Representación técnica del tablero."""
+        return f"Board(points={len([p for p in self.points if p])}, bar={len(self.bar)}, off={self.off})"
 
 
 class BoardWithSetup(Board):
     """
-    OCP: Extensión de Board que incluye posición inicial estándar.
-    
-    No modifica Board, solo extiende su comportamiento.
+    Tablero con posición inicial estándar de Backgammon.
     """
 
-    def initialize_points(self) -> List[list]:
+    def setup_initial_position(self, player1: Player, player2: Player) -> None:
         """
-        Inicializa con la posición estándar de Backgammon.
+        Configura la posición inicial estándar del Backgammon.
         
-        Nota: Requiere objetos Checker o similar para las fichas.
-        Por ahora retorna estructura vacía y se debe llamar a setup_initial_position.
-        """
-        return [[] for _ in range(24)]
-
-    def setup_initial_position(self, player_white: Any, player_black: Any) -> None:
-        """
-        Configura la posición inicial estándar del juego.
+        Posición inicial estándar (vista desde el lado de las blancas):
+        - Punto 1:  2 fichas BLANCAS
+        - Punto 6:  5 fichas NEGRAS
+        - Punto 8:  3 fichas NEGRAS
+        - Punto 12: 5 fichas NEGRAS
+        - Punto 13: 5 fichas BLANCAS
+        - Punto 17: 3 fichas BLANCAS
+        - Punto 19: 5 fichas BLANCAS
+        - Punto 24: 2 fichas NEGRAS
         
         Args:
-            player_white: Jugador/Checker blanco
-            player_black: Jugador/Checker negro
+            player1: Jugador con fichas blancas
+            player2: Jugador con fichas negras
         """
         # Limpiar tablero
-        self.reset()
+        self.points = [[] for _ in range(25)]
+        self.bar = []
+        self.off = {"blanco": 0, "negro": 0}
         
-        # Posición inicial estándar (fichas blancas)
-        # 2 fichas en punto 1
+        # Fichas BLANCAS
+        # Punto 1: 2 blancas
         for _ in range(2):
-            self.colocar_ficha(player_white, 1)
+            self.colocar_ficha(player1, 1)
         
-        # 5 fichas en punto 12
+        # Punto 12: 5 blancas
         for _ in range(5):
-            self.colocar_ficha(player_white, 12)
+            self.colocar_ficha(player1, 12)
         
-        # 3 fichas en punto 17
+        # Punto 17: 3 blancas
         for _ in range(3):
-            self.colocar_ficha(player_white, 17)
+            self.colocar_ficha(player1, 17)
         
-        # 5 fichas en punto 19
+        # Punto 19: 5 blancas
         for _ in range(5):
-            self.colocar_ficha(player_white, 19)
+            self.colocar_ficha(player1, 19)
         
-        # Posición inicial estándar (fichas negras - espejo)
-        # 2 fichas en punto 24
+        # Fichas NEGRAS
+        # Punto 24: 2 negras
         for _ in range(2):
-            self.colocar_ficha(player_black, 24)
+            self.colocar_ficha(player2, 24)
         
-        # 5 fichas en punto 13
+        # Punto 13: 5 negras
         for _ in range(5):
-            self.colocar_ficha(player_black, 13)
+            self.colocar_ficha(player2, 13)
         
-        # 3 fichas en punto 8
+        # Punto 8: 3 negras
         for _ in range(3):
-            self.colocar_ficha(player_black, 8)
+            self.colocar_ficha(player2, 8)
         
-        # 5 fichas en punto 6
+        # Punto 6: 5 negras
         for _ in range(5):
-            self.colocar_ficha(player_black, 6)
+            self.colocar_ficha(player2, 6)
