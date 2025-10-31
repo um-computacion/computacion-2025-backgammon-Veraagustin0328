@@ -1,13 +1,12 @@
-"""
-Tests para la clase Game.
-"""
-
 import pytest
 from backgammon.core.game import Game
 from backgammon.core.board import Board
 from backgammon.core.player import Player
 from backgammon.core.dice import Dice
 
+"""
+Tests para la clase Game.
+"""
 
 class TestGameInicializacion:
     """Tests de inicialización del juego."""
