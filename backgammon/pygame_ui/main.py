@@ -12,7 +12,7 @@ VERSIÓN FINAL con colores y layout correctos
 """
 
 
-# ------------------ Config visual ------------------
+#Config visual 
 WIDTH, HEIGHT = 1300, 700  # MÁS ANCHO
 MARGIN_X, MARGIN_Y = 60, 40  # MÁS MARGEN
 BG_COLOR = (245, 239, 230)
