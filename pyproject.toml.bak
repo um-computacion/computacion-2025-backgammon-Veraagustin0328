@@ -1,0 +1,18 @@
+﻿[project]
+name = "backgammon"
+version = "0.0.1"
+requires-python = ">=3.10"
+
+[tool.pytest.ini_options]
+addopts = "-q --cov=backgammon --cov-report=term-missing --cov-fail-under=90"
+testpaths = ["backgammon/tests"]
+pythonpath = ["."]
+
+[tool.coverage.run]
+branch = true
+source = ["backgammon"]
+omit = ["**/__init__.py"]
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true
