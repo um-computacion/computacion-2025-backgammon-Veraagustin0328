@@ -176,7 +176,7 @@ class Game:
         }
         self.set_current_index(0)
 
-    # ==================== MÉTODOS NUEVOS PARA MEJORAR COVERAGE ====================
+    # metodos nuevos para mejorar coverage 
 
     def is_valid_move(self, origin: int, dest: int, dice_value: int) -> bool:
         """
@@ -297,7 +297,7 @@ class Game:
         # Este método se puede implementar cuando Board tenga get_off_count
         return None
 
-    # ==================== FIN MÉTODOS NUEVOS ====================
+    # Fin metodos nuevos 
 
     def to_dict(self) -> Dict[str, Any]:
         """Estado mínimo serializable (no pretende ser formato final del juego)"""

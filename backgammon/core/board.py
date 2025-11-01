@@ -1,9 +1,9 @@
+from __future__ import annotations
+from typing import List, Optional, TYPE_CHECKING
 """
 Módulo que define el tablero de Backgammon.
 """
 
-from __future__ import annotations
-from typing import List, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .player import Player
