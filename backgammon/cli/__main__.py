@@ -1,4 +1,4 @@
-import argparse
+﻿import argparse
 import sys
 
 try:
@@ -18,6 +18,7 @@ except ImportError:
 from backgammon.core.dice import Dice
 from backgammon.core.board import Board, BoardWithSetup
 from backgammon.core.player import Player
+from backgammon.core.game import Game
 
 
 def print_header(text):
@@ -130,7 +131,7 @@ def cmd_info(_args):
     print(f"  {Fore.GREEN}roll{Style.RESET_ALL}  - Tirar los dados")
     print(f"  {Fore.GREEN}board{Style.RESET_ALL} - Mostrar el tablero")
     print(f"  {Fore.GREEN}info{Style.RESET_ALL}  - Mostrar esta información")
-    print(f"  {Fore.GREEN}play{Style.RESET_ALL}  - Jugar una partida interactiva (próximamente)")
+    print(f"  {Fore.GREEN}play{Style.RESET_ALL}  - Jugar una partida interactiva")
     
     print(f"\n{Fore.CYAN}{Style.BRIGHT}Reglas básicas:{Style.RESET_ALL}")
     print("  • Cada jugador tiene 15 fichas (blancas o negras)")
@@ -138,16 +139,6 @@ def cmd_info(_args):
     print("  • Si sacás dobles, movés 4 veces ese número")
     print("  • Podés capturar fichas solitarias del oponente")
     print("  • Las fichas capturadas van a la 'barra' y deben re-entrar")
-
-
-def cmd_play(_args):
-    """Comando para jugar (placeholder por ahora)."""
-    print_header("MODO JUEGO")
-    print(f"{Fore.YELLOW}Este comando está en desarrollo.{Style.RESET_ALL}")
-    print("Por ahora podés usar:")
-    print(f"  • {Fore.GREEN}roll{Style.RESET_ALL} para tirar dados")
-    print(f"  • {Fore.GREEN}board{Style.RESET_ALL} para ver el tablero")
-    print(f"\n{Fore.CYAN}Próximamente: partida interactiva completa!{Style.RESET_ALL}")
 
 
 def cmd_setup(_args):
@@ -287,6 +278,301 @@ def cmd_stats(_args):
     print(f"  • {Fore.GREEN}¡El primero en sacar las 15 fichas gana!{Style.RESET_ALL}")
 
 
+def cmd_play(_args):
+    """Juego interactivo completo en CLI."""
+    print_header("BACKGAMMON - MODO JUEGO")
+    
+    # Setup inicial
+    print(f"{Fore.CYAN}Configurando partida...{Style.RESET_ALL}\n")
+    
+    nombre1 = input("Nombre del Jugador 1 (Blancas): ").strip() or "Jugador 1"
+    nombre2 = input("Nombre del Jugador 2 (Negras): ").strip() or "Jugador 2"
+    
+    p1 = Player(nombre1, color="blanco")
+    p2 = Player(nombre2, color="negro")
+    
+    board = BoardWithSetup()
+    board.setup_initial_position(p1, p2)
+    
+    game = Game(p1, p2, board=board)
+    
+    print(f"\n{Fore.GREEN}¡Partida iniciada!{Style.RESET_ALL}")
+    print(f"{Fore.WHITE}{nombre1} (●){Style.RESET_ALL} vs {Fore.RED}{nombre2} (○){Style.RESET_ALL}\n")
+    
+    dados_tirados = []
+    movimientos_restantes = []
+    
+    # Loop principal del juego
+    while True:
+        current = game.get_current_player()
+        color_display = f"{Fore.WHITE}●{Style.RESET_ALL}" if current.get_color() == "blanco" else f"{Fore.RED}○{Style.RESET_ALL}"
+        
+        print(f"\n{'='*60}")
+        print(f"{Fore.CYAN}{Style.BRIGHT}Turno de: {current.get_nombre()} {color_display}{Style.RESET_ALL}")
+        print(f"{'='*60}")
+        
+        # Mostrar tablero
+        mostrar_tablero_cli(game.get_board())
+        
+        # Mostrar dados si ya se tiraron
+        if movimientos_restantes:
+            print(f"\n{Fore.YELLOW}Movimientos restantes: {movimientos_restantes}{Style.RESET_ALL}")
+        
+        # Menú de opciones
+        print(f"\n{Fore.CYAN}Opciones:{Style.RESET_ALL}")
+        if not movimientos_restantes:
+            print("  [R] Tirar dados")
+        else:
+            print("  [M] Mover ficha (ej: 'M 8 5' mueve de punto 8 a punto 5)")
+            print("  [P] Pasar turno (si no podés mover)")
+        print("  [B] Ver tablero de nuevo")
+        print("  [H] Ayuda")
+        print("  [Q] Salir del juego")
+        
+        # Input del usuario
+        comando = input(f"\n{Fore.GREEN}>{Style.RESET_ALL} ").strip().upper()
+        
+        if comando == 'Q':
+            print(f"\n{Fore.YELLOW}Saliendo del juego...{Style.RESET_ALL}")
+            break
+        
+        elif comando == 'B':
+            continue  # Vuelve al inicio del loop y muestra el tablero
+        
+        elif comando == 'H':
+            mostrar_ayuda_juego()
+            input("\nPresioná ENTER para continuar...")
+        
+        elif comando == 'R':
+            if movimientos_restantes:
+                print(f"{Fore.RED}¡Ya tiraste los dados! Tenés que mover o pasar.{Style.RESET_ALL}")
+                continue
+            
+            # Tirar dados
+            dados_tirados = game.roll()
+            movimientos_restantes = dados_tirados.copy()
+            
+            d1, d2 = dados_tirados[0], dados_tirados[1]
+            print(f"\n{Fore.GREEN}{Style.BRIGHT}🎲 Dados: [{d1}] [{d2}]{Style.RESET_ALL}")
+            
+            if d1 == d2:
+                print(f"{Fore.YELLOW}¡DOBLES! Podés mover 4 veces con {d1}{Style.RESET_ALL}")
+            
+            # Verificar si puede mover
+            if not puede_mover(game.get_board(), current, movimientos_restantes):
+                print(f"\n{Fore.RED}No tenés movimientos válidos. Pasando turno...{Style.RESET_ALL}")
+                input("Presioná ENTER para continuar...")
+                game.next_turn()
+                movimientos_restantes = []
+                dados_tirados = []
+        
+        elif comando == 'P':
+            if not movimientos_restantes:
+                print(f"{Fore.RED}No podés pasar sin tirar los dados primero.{Style.RESET_ALL}")
+                continue
+            
+            print(f"{Fore.YELLOW}Pasando turno...{Style.RESET_ALL}")
+            game.next_turn()
+            movimientos_restantes = []
+            dados_tirados = []
+        
+        elif comando.startswith('M '):
+            if not movimientos_restantes:
+                print(f"{Fore.RED}¡Primero tenés que tirar los dados! (comando R){Style.RESET_ALL}")
+                continue
+            
+            # Parsear movimiento
+            try:
+                partes = comando.split()
+                if len(partes) != 3:
+                    print(f"{Fore.RED}Formato incorrecto. Usá: M origen destino (ej: M 8 5){Style.RESET_ALL}")
+                    continue
+                
+                origen = int(partes[1])
+                destino = int(partes[2])
+                
+                # Validar que el movimiento usa uno de los dados disponibles
+                if current.get_color() == "blanco":
+                    distancia = destino - origen
+                else:
+                    distancia = origen - destino
+                
+                if distancia not in movimientos_restantes:
+                    print(f"{Fore.RED}No tenés un dado de {distancia}. Dados disponibles: {movimientos_restantes}{Style.RESET_ALL}")
+                    continue
+                
+                # Intentar mover
+                if game.is_valid_move(origen, destino, distancia):
+                    try:
+                        game.move(origen, destino)
+                        movimientos_restantes.remove(distancia)
+                        
+                        print(f"{Fore.GREEN}✓ Movimiento exitoso: {origen} → {destino}{Style.RESET_ALL}")
+                        
+                        # Si se acabaron los movimientos, cambiar turno
+                        if not movimientos_restantes:
+                            print(f"\n{Fore.CYAN}Todos los dados usados. Cambiando turno...{Style.RESET_ALL}")
+                            input("Presioná ENTER para continuar...")
+                            game.next_turn()
+                            dados_tirados = []
+                    
+                    except Exception as e:
+                        print(f"{Fore.RED}Error al mover: {e}{Style.RESET_ALL}")
+                else:
+                    print(f"{Fore.RED}Movimiento inválido. Verificá:{Style.RESET_ALL}")
+                    print(f"  - Que tengas una ficha en el punto {origen}")
+                    print(f"  - Que la ficha sea tuya")
+                    print(f"  - Que el destino no tenga 2+ fichas del oponente")
+            
+            except ValueError:
+                print(f"{Fore.RED}Los puntos deben ser números. Ej: M 8 5{Style.RESET_ALL}")
+            except Exception as e:
+                print(f"{Fore.RED}Error: {e}{Style.RESET_ALL}")
+        
+        else:
+            print(f"{Fore.RED}Comando no reconocido. Usá H para ver ayuda.{Style.RESET_ALL}")
+
+
+def mostrar_tablero_cli(board):
+    """Muestra el tablero en formato ASCII."""
+    print("\n" + "┌─────────────────────────────────────────────────────────────┐")
+    
+    # Top (puntos 13-24)
+    top_nums = "│ " + "  ".join([f"{i:2d}" for i in range(13, 19)]) + " │ BAR │ " + "  ".join([f"{i:2d}" for i in range(19, 25)]) + " │"
+    print(top_nums)
+    
+    # Fichas superiores
+    top_line = "│ "
+    for i in range(13, 25):
+        count = board.point_count(i)
+        if count == 0:
+            top_line += " -- "
+        else:
+            top_checker = board.get_top_checker(i)
+            if top_checker and hasattr(top_checker, 'get_color'):
+                color = top_checker.get_color()
+                if HAS_COLOR:
+                    symbol = f"{Fore.WHITE}●{count:1d}{Style.RESET_ALL}" if color == "blanco" else f"{Fore.RED}○{count:1d}{Style.RESET_ALL}"
+                else:
+                    symbol = f"●{count:1d}" if color == "blanco" else f"○{count:1d}"
+                top_line += f" {symbol} "
+            else:
+                top_line += f" {count:2d} "
+        
+        if i == 18:
+            top_line += "│     │ "
+    
+    top_line += "│"
+    print(top_line)
+    
+    # Línea divisoria
+    print("├─────────────────────────────────────────────────────────────┤")
+    
+    # Fichas inferiores
+    bottom_line = "│ "
+    for i in range(12, 0, -1):
+        count = board.point_count(i)
+        if count == 0:
+            bottom_line += " -- "
+        else:
+            bottom_checker = board.get_top_checker(i)
+            if bottom_checker and hasattr(bottom_checker, 'get_color'):
+                color = bottom_checker.get_color()
+                if HAS_COLOR:
+                    symbol = f"{Fore.WHITE}●{count:1d}{Style.RESET_ALL}" if color == "blanco" else f"{Fore.RED}○{count:1d}{Style.RESET_ALL}"
+                else:
+                    symbol = f"●{count:1d}" if color == "blanco" else f"○{count:1d}"
+                bottom_line += f" {symbol} "
+            else:
+                bottom_line += f" {count:2d} "
+        
+        if i == 7:
+            bottom_line += "│ OFF │ "
+    
+    bottom_line += "│"
+    print(bottom_line)
+    
+    # Bottom (puntos 12-1)
+    bottom_nums = "│ " + "  ".join([f"{i:2d}" for i in range(12, 6, -1)]) + " │     │ " + "  ".join([f"{i:2d}" for i in range(6, 0, -1)]) + " │"
+    print(bottom_nums)
+    
+    print("└─────────────────────────────────────────────────────────────┘")
+    
+    # Info adicional
+    bar_white = board.get_bar_count("blanco")
+    bar_black = board.get_bar_count("negro")
+    off_white = board.get_off_count("blanco")
+    off_black = board.get_off_count("negro")
+    
+    print(f"\n{Fore.YELLOW}BAR:{Style.RESET_ALL} Blancas: {bar_white}, Negras: {bar_black}")
+    print(f"{Fore.GREEN}OFF:{Style.RESET_ALL} Blancas: {off_white}, Negras: {off_black}")
+
+
+def puede_mover(board, player, movimientos):
+    """Verifica si el jugador puede hacer algún movimiento válido."""
+    color = player.get_color()
+    
+    # Verificar si hay fichas en la barra
+    if board.get_bar_count(color) > 0:
+        # TODO: Implementar lógica de re-entrada desde barra
+        return True  # Por ahora asumimos que siempre puede
+    
+    # Buscar fichas del jugador en el tablero
+    for punto in range(1, 25):
+        if board.point_count(punto) > 0:
+            top = board.get_top_checker(punto)
+            if top and hasattr(top, 'get_color') and top.get_color() == color:
+                # Verificar si puede mover con alguno de los dados
+                for mov in movimientos:
+                    if color == "blanco":
+                        destino = punto + mov
+                    else:
+                        destino = punto - mov
+                    
+                    if 1 <= destino <= 24:
+                        # Verificar si el destino es válido
+                        if board.point_count(destino) == 0:
+                            return True
+                        dest_top = board.get_top_checker(destino)
+                        if dest_top and hasattr(dest_top, 'get_color'):
+                            if dest_top.get_color() == color:
+                                return True
+                            if board.point_count(destino) == 1:
+                                return True
+    
+    return False
+
+
+def mostrar_ayuda_juego():
+    """Muestra ayuda sobre cómo jugar."""
+    print(f"\n{Fore.CYAN}{Style.BRIGHT}=== AYUDA - CÓMO JUGAR ==={Style.RESET_ALL}\n")
+    
+    print(f"{Fore.YELLOW}Objetivo:{Style.RESET_ALL}")
+    print("  Mover todas tus fichas al 'home board' y sacarlas del tablero.")
+    print("  El primer jugador en sacar las 15 fichas gana.\n")
+    
+    print(f"{Fore.YELLOW}Comandos:{Style.RESET_ALL}")
+    print("  R         - Tirar los dados")
+    print("  M X Y     - Mover ficha del punto X al punto Y")
+    print("  P         - Pasar turno (si no podés mover)")
+    print("  B         - Ver el tablero de nuevo")
+    print("  H         - Ver esta ayuda")
+    print("  Q         - Salir del juego\n")
+    
+    print(f"{Fore.YELLOW}Reglas básicas:{Style.RESET_ALL}")
+    print("  • Cada jugador tiene 15 fichas (blancas ● o negras ○)")
+    print("  • Las blancas se mueven de 1→24, las negras de 24→1")
+    print("  • Tirás dos dados y movés tus fichas esa cantidad")
+    print("  • Si sacás dobles, movés 4 veces ese número")
+    print("  • Podés capturar fichas solitarias del oponente")
+    print("  • Las fichas capturadas van a la 'barra' y deben re-entrar\n")
+    
+    print(f"{Fore.YELLOW}Ejemplo de movimiento:{Style.RESET_ALL}")
+    print("  Si tirás [3] [5] y tenés una ficha en el punto 8:")
+    print("  - M 8 11   (mover 3 espacios)")
+    print("  - M 8 13   (mover 5 espacios)")
+
+
 def main():
     """Función principal de la CLI."""
     parser = argparse.ArgumentParser(
@@ -295,14 +581,18 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Ejemplos de uso:
+  backgammon play          Jugar una partida completa
   backgammon roll          Tirar los dados
   backgammon board         Ver el tablero
   backgammon info          Ver información del juego
-  backgammon play          Jugar una partida (en desarrollo)
         """
     )
     
     sub = parser.add_subparsers(dest="cmd", title="Comandos disponibles")
+    
+    # Comando play
+    p_play = sub.add_parser("play", help="Jugar una partida interactiva completa")
+    p_play.set_defaults(func=cmd_play)
     
     # Comando roll
     p_roll = sub.add_parser("roll", help="Tirar los dados")
@@ -315,10 +605,6 @@ Ejemplos de uso:
     # Comando info
     p_info = sub.add_parser("info", help="Mostrar información del juego")
     p_info.set_defaults(func=cmd_info)
-    
-    # Comando play
-    p_play = sub.add_parser("play", help="Jugar una partida interactiva")
-    p_play.set_defaults(func=cmd_play)
     
     # Comando setup
     p_setup = sub.add_parser("setup", help="Mostrar tablero con posición inicial")
