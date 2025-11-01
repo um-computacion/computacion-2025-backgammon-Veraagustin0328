@@ -1,13 +1,11 @@
 [run]
-branch = True
-source = backgammon
+source = backgammon/core
 omit =
-    backgammon/backgammon/core/player.py
-    **/__init__.py
+    backgammon/cli/*
+    backgammon/pygame_ui/*
+    */__main__.py
 
 [report]
-show_missing = True
-skip_empty = True
-omit =
-    backgammon/backgammon/core/player.py
-    **/__init__.py
+exclude_lines =
+    pragma: no cover
+    if __name__ == .__main__.:

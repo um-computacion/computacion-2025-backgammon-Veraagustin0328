@@ -1,9 +1,9 @@
+from __future__ import annotations
+from typing import List, Optional, TYPE_CHECKING
 """
 Módulo que define el tablero de Backgammon.
 """
 
-from __future__ import annotations
-from typing import List, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .player import Player
@@ -46,6 +46,7 @@ class Board:
     def mover_ficha(self, origin: int, dest: int) -> None:
         """
         Mueve una ficha de un punto a otro.
+        Si hay una ficha solitaria del oponente en el destino, la captura automáticamente.
         
         Args:
             origin: Punto de origen (1-24)
@@ -63,7 +64,15 @@ class Board:
         # Sacar ficha del origen
         checker = self.points[origin].pop()
         
-        # Colocar en destino
+        # Verificar si hay captura (1 ficha solitaria del oponente)
+        if self.point_count(dest) == 1:
+            dest_checker = self.get_top_checker(dest)
+            if dest_checker and dest_checker.get_color() != checker.get_color():
+                # Capturar: sacar la ficha del oponente y ponerla en bar
+                captured = self.points[dest].pop()
+                self.bar.append(captured)
+        
+        # Colocar la ficha en el destino
         self.points[dest].append(checker)
 
     def point_count(self, point: int) -> int:
@@ -209,6 +218,28 @@ class Board:
         """
         self.off[color] = self.off.get(color, 0) + 1
 
+    def bear_off_checker(self, color: str) -> None:
+        """
+        Saca una ficha del tablero (bear off).
+        Alias de bear_off para compatibilidad con tests.
+        
+        Args:
+            color: Color de la ficha a sacar
+        """
+        self.bear_off(color)
+
+    def has_won(self, color: str) -> bool:
+        """
+        Verifica si un jugador ganó (sacó todas sus 15 fichas).
+        
+        Args:
+            color: Color del jugador
+        
+        Returns:
+            True si tiene 15 fichas fuera del tablero
+        """
+        return self.get_off_count(color) >= 15
+
     def get_all_checkers(self, color: str) -> List[tuple[int, int]]:
         """
         Obtiene todas las posiciones de fichas de un color.
@@ -323,8 +354,8 @@ class BoardWithSetup(Board):
         - Punto 1:  2 fichas BLANCAS
         - Punto 6:  5 fichas NEGRAS
         - Punto 8:  3 fichas NEGRAS
-        - Punto 12: 5 fichas NEGRAS
-        - Punto 13: 5 fichas BLANCAS
+        - Punto 12: 5 fichas BLANCAS
+        - Punto 13: 5 fichas NEGRAS
         - Punto 17: 3 fichas BLANCAS
         - Punto 19: 5 fichas BLANCAS
         - Punto 24: 2 fichas NEGRAS
@@ -334,11 +365,9 @@ class BoardWithSetup(Board):
             player2: Jugador con fichas negras
         """
         # Limpiar tablero
-        self.points = [[] for _ in range(25)]
-        self.bar = []
-        self.off = {"blanco": 0, "negro": 0}
+        self.clear()
         
-        # Fichas BLANCAS
+        # Fichas BLANCAS (player1)
         # Punto 1: 2 blancas
         for _ in range(2):
             self.colocar_ficha(player1, 1)
@@ -355,7 +384,7 @@ class BoardWithSetup(Board):
         for _ in range(5):
             self.colocar_ficha(player1, 19)
         
-        # Fichas NEGRAS
+        # Fichas NEGRAS (player2)
         # Punto 24: 2 negras
         for _ in range(2):
             self.colocar_ficha(player2, 24)
