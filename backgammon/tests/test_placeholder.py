@@ -1,2 +1,0 @@
-﻿def test_repo_bootstrap_ok():
-    assert True
