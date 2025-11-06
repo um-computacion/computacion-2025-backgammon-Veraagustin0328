@@ -180,7 +180,7 @@ class Game:
 
     def is_valid_move(self, origin: int, dest: int, dice_value: int) -> bool:
         """
-        Verifica si un movimiento es válido.
+        Verifica si un movimiento es válido según las reglas de Backgammon.
         
         Args:
             origin: Punto de origen (1-24)
@@ -209,7 +209,34 @@ class Game:
         else:
             distance = origin - dest
         
-        return distance == dice_value
+        if distance != dice_value:
+            return False
+        
+        # Verificar que el destino sea válido (dentro del tablero)
+        if dest < 1 or dest > 24:
+            return False
+        
+        # Verificar que el destino no esté bloqueado
+        dest_count = self.__board.point_count(dest)
+        
+        # Si el destino está vacío, el movimiento es válido
+        if dest_count == 0:
+            return True
+        
+        # Si hay fichas en el destino, verificar las reglas de Backgammon
+        dest_checker = self.__board.get_top_checker(dest)
+        
+        if dest_checker is None:
+            return True
+        
+        if dest_checker.get_color() == current_color:
+            # Destino tiene fichas propias, se puede mover
+            return True
+        else:
+            # Destino tiene fichas del oponente
+            # Solo es válido si hay exactamente 1 (se puede capturar)
+            # Si hay 2 o más, el punto está bloqueado
+            return dest_count == 1
 
     def is_home_board_loaded(self, player: Player) -> bool:
         """

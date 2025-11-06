@@ -202,18 +202,7 @@ def render_board(surface, game, font):
     off_text = font.render(f"Black: {black_off}", True, TEXT_COLOR)
     surface.blit(off_text, (info_x, board_rect.bottom - 40))
     
-    return hitmap
-
-
-def hit_test(hitmap, pos):
-    """Detecta click en ficha"""
-    mx, my = pos
-    for point, circles in hitmap.items():
-        for (cx, cy, r) in circles:
-            dx, dy = mx - cx, my - cy
-            if dx*dx + dy*dy <= r*r:
-                return point
-    return None
+    return hitmap, board_rect
 
 
 def draw_dice(surface, dice_values, x, y, font):
@@ -293,6 +282,7 @@ def main():
     selected_point = None
     message = "Presioná ESPACIO o 'Roll Dice' para empezar"
     hitmap = {}
+    board_rect = None
     
     running = True
     while running:
@@ -308,7 +298,7 @@ def main():
                         dice_values = game.roll()
                         available_moves = dice_values.copy()
                         selected_point = None
-                        message = f"Dados: {dice_values}. Hacé click en una ficha"
+                        message = f"Dados: {dice_values}. Click en triángulo con tu ficha"
             
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 button_rect = pygame.Rect(WIDTH - 200, 210, 140, 45)
@@ -318,60 +308,88 @@ def main():
                         dice_values = game.roll()
                         available_moves = dice_values.copy()
                         selected_point = None
-                        message = f"Dados: {dice_values}"
+                        message = f"Dados: {dice_values}. Click en triángulo con tu ficha"
                     else:
                         message = "Terminá de mover primero"
                 
                 else:
-                    clicked_point = hit_test(hitmap, event.pos)
-                    
-                    if clicked_point and dice_values:
+                    if dice_values and board_rect:
                         current_player = game.get_current_player()
-                        board = game.get_board()
+                        board_obj = game.get_board()
                         
-                        if selected_point is None:
-                            if board.point_count(clicked_point) > 0:
-                                top = board.get_top_checker(clicked_point)
-                                if top and top.get_color() == current_player.get_color():
-                                    selected_point = clicked_point
-                                    message = f"Punto {clicked_point} seleccionado"
-                                else:
-                                    message = "Esa no es tu ficha"
-                            else:
-                                message = "Punto vacío"
+                        # Detectar click en triángulo
+                        tri_width = board_rect.width / 12.0
+                        mx, my = event.pos
                         
-                        else:
-                            if current_player.get_color() == "blanco":
-                                distance = clicked_point - selected_point
-                            else:
-                                distance = selected_point - clicked_point
+                        clicked_point = None
+                        
+                        if board_rect.left <= mx <= board_rect.right and board_rect.top <= my <= board_rect.bottom:
+                            col = int((mx - board_rect.left) / tri_width)
                             
-                            if distance in available_moves:
-                                try:
-                                    board.mover_ficha(selected_point, clicked_point)
-                                    available_moves.remove(distance)
-                                    message = f"Moviste {selected_point} → {clicked_point}"
-                                    selected_point = None
-                                    
-                                    if not available_moves:
-                                        game.next_turn()
-                                        dice_values = []
-                                        message = f"Turno de {game.get_current_player().get_nombre()}"
-                                
-                                except Exception:
-                                    message = f"Movimiento inválido"
-                                    selected_point = None
+                            # Determinar si es top o bottom
+                            mid_y = board_rect.centery
+                            if my < mid_y:
+                                # Top row (puntos 13-24)
+                                clicked_point = 13 + col
                             else:
-                                message = f"Distancia {distance} no disponible"
-                                selected_point = None
+                                # Bottom row (puntos 12-1)
+                                clicked_point = 12 - col
+                        
+                        if clicked_point:
+                            if selected_point is None:
+                                # SELECCIONAR FICHA
+                                if board_obj.point_count(clicked_point) > 0:
+                                    top = board_obj.get_top_checker(clicked_point)
+                                    if top and top.get_color() == current_player.get_color():
+                                        selected_point = clicked_point
+                                        message = f"Punto {clicked_point} seleccionado. Click en destino."
+                                    else:
+                                        message = "Esa no es tu ficha"
+                                else:
+                                    message = "Punto vacío - seleccioná uno con tu ficha"
+                            
+                            else:
+                                # MOVER FICHA
+                                if current_player.get_color() == "blanco":
+                                    distance = clicked_point - selected_point
+                                else:
+                                    distance = selected_point - clicked_point
+                                
+                                if distance in available_moves:
+                                    if game.is_valid_move(selected_point, clicked_point, distance):
+                                        try:
+                                            board_obj.mover_ficha(selected_point, clicked_point)
+                                            available_moves.remove(distance)
+                                            message = f"✓ Moviste {selected_point} → {clicked_point}"
+                                            selected_point = None
+                                            
+                                            if not available_moves:
+                                                game.next_turn()
+                                                dice_values = []
+                                                message = f"Turno de {game.get_current_player().get_nombre()}. Presiona ESPACIO"
+                                        
+                                        except Exception as e:
+                                            message = f"Error: {str(e)}"
+                                            selected_point = None
+                                    else:
+                                        message = "Movimiento bloqueado (2+ fichas enemigas)"
+                                        selected_point = None
+                                else:
+                                    destinos = []
+                                    for d in available_moves:
+                                        if current_player.get_color() == "blanco":
+                                            destinos.append(f"{selected_point + d}")
+                                        else:
+                                            destinos.append(f"{selected_point - d}")
+                                    message = f"Destinos válidos: {', '.join(destinos)}"
+                                    selected_point = None
         
         # RENDER
-        hitmap = render_board(screen, game, font)
+        hitmap, board_rect = render_board(screen, game, font)
         draw_game_info(screen, game, font, available_moves, message)
         
         # Highlight punto seleccionado
-        if selected_point:
-            board_rect = pygame.Rect(MARGIN_X, MARGIN_Y + 30, WIDTH - 2*MARGIN_X - 220, HEIGHT - 2*MARGIN_Y - 60)
+        if selected_point and board_rect:
             row, col_vis = point_index_to_display(selected_point)
             tri_width = board_rect.width / 12.0
             x = board_rect.left + col_vis * tri_width
@@ -388,7 +406,7 @@ def main():
         
         # Instrucciones
         inst_font = pygame.font.SysFont(None, 18)
-        inst = inst_font.render("ESPACIO = tirar dados | Click = seleccionar/mover | ESC = salir", True, TEXT_COLOR)
+        inst = inst_font.render("ESPACIO = tirar dados | Click en triángulo = seleccionar/mover | ESC = salir", True, TEXT_COLOR)
         screen.blit(inst, (MARGIN_X, 15))
         
         pygame.display.flip()
