@@ -1,8 +1,11 @@
 import sys
 import pygame
-from backgammon.core.game import Game
-from backgammon.core.board import BoardWithSetup
-from backgammon.core.player import Player
+
+# SOLID: Usa las clases refactorizadas
+from backgammon.core.game_refactored import GameFacade as Game
+from backgammon.core.board_refactored import BoardWithSetupFacade as BoardWithSetup
+from backgammon.core.player_refactored import PlayerFacade as Player
+
 from backgammon.core.dice import Dice
 
 
