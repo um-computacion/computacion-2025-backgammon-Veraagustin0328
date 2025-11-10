@@ -1,4 +1,3 @@
-# backgammon/tests/test_game_refactored.py
 import importlib
 import itertools
 import pytest
@@ -20,7 +19,7 @@ Player = getattr(core_player, "Player")
 Dice = getattr(core_dice, "Dice")
 
 
-# -------------------- Helpers resistentes a firmas --------------------
+# Helpers resistentes a firmas 
 
 def make_player(color_str: str, nombre: str = None):
     """
@@ -92,7 +91,7 @@ def has_won_on_board(board, color):
     return False
 
 
-# ------------------------ Fixtures ------------------------
+# Fixtures 
 
 @pytest.fixture
 def players():
@@ -118,7 +117,7 @@ def deterministic_dice(monkeypatch):
     return seq
 
 
-# ------------------------ MoveValidator ------------------------
+# MoveValidator 
 
 def test_movevalidator_rules_basic(players, empty_board):
     white, black = players
@@ -174,7 +173,7 @@ def test_movevalidator_rules_basic(players, empty_board):
             assert isinstance(mv.is_valid_move(6, 8, 2), bool)
 
 
-# ------------------------ TurnManager ------------------------
+# TurnManager 
 
 def test_turnmanager_cycle_and_set(players):
     tm = TurnManager(list(players))
@@ -196,7 +195,7 @@ def test_turnmanager_cycle_and_set(players):
         tm.set_current_index(2)
 
 
-# ------------------------ VictoryChecker ------------------------
+#  VictoryChecker 
 
 def test_victorychecker_with_fake_board():
     # Usamos players falsos con colores exactamente controlados
@@ -221,7 +220,7 @@ def test_victorychecker_with_fake_board():
     assert vc2.get_winner().get_color() in ("negro", "black")
 
 
-# ------------------------ GameFacade: integración ------------------------
+# GameFacade: integración 
 
 @pytest.fixture
 def facade(players, empty_board, deterministic_dice):

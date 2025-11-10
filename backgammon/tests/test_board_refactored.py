@@ -13,7 +13,7 @@ BoardValidator = br.BoardValidator
 BoardFacade = br.BoardFacade
 BoardWithSetupFacade = br.BoardWithSetupFacade
 
-# --- Utilidades para el test ---
+# Utilidades para el test 
 
 class FakePlayer:
     """Jugador mínimo para tests: sólo necesita get_color()."""
@@ -44,7 +44,7 @@ def neutralize_original_board(monkeypatch):
     yield
 
 
-# ---------------------- TESTS DE COMPONENTES BÁSICOS ----------------------
+#  TESTS DE COMPONENTES BÁSICOS 
 
 def test_boardpoints_basic_ops():
     p = BoardPoints()
@@ -177,7 +177,7 @@ def test_board_validator_rules():
     assert v.can_place_checker(5, "negro") is False
 
 
-# ---------------------- TESTS DE FACADE / INTEGRACIÓN ----------------------
+#  TESTS DE FACADE / INTEGRACIÓN 
 
 def test_facade_colocar_mover_capturar(neutralize_original_board, players):
     white, black = players

@@ -1,13 +1,3 @@
-"""
-Implementación SOLID de Game siguiendo los principios:
-- SRP: Cada clase tiene una responsabilidad única
-- OCP: Extensible sin modificar código existente
-- DIP: Depende de abstracciones (interfaces implícitas)
-
-Esta implementación envuelve (wrapper/facade) la clase Game original
-sin modificarla, manteniendo compatibilidad con Pygame.
-"""
-
 from __future__ import annotations
 from typing import Optional, List
 from .game import Game

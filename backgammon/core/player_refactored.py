@@ -1,14 +1,3 @@
-"""
-Implementación SOLID de Player siguiendo SRP.
-
-Separa las responsabilidades de Player en:
-- PlayerIdentity: Solo identidad (nombre, color)
-- PlayerInventory: Gestión de fichas
-- PlayerScore: Gestión de puntuación
-
-PlayerFacade coordina estos componentes siguiendo el patrón Facade.
-"""
-
 from __future__ import annotations
 from typing import Dict, Any
 from .player import Player
@@ -150,7 +139,7 @@ class PlayerFacade:
         # Guardar referencia a Player original para compatibilidad
         self.__original_player = Player(nombre, color)
     
-    # ========== Getters y Setters de componentes ==========
+   
     
     def get_identity(self) -> PlayerIdentity:
         """Getter del componente de identidad."""
@@ -176,7 +165,7 @@ class PlayerFacade:
         """Setter del componente de puntuación."""
         self.__score = score
     
-    # ========== Delegación a PlayerIdentity ==========
+    # Delegación a PlayerIdentity 
     
     def get_nombre(self) -> str:
         """Retorna el nombre del jugador."""
@@ -196,7 +185,7 @@ class PlayerFacade:
         self.__identity.set_color(color)
         self.__original_player.set_color(color)
     
-    # ========== Delegación a PlayerInventory ==========
+    # Delegación a PlayerInventory 
     
     def get_fichas(self) -> int:
         """Retorna la cantidad de fichas."""
@@ -212,7 +201,7 @@ class PlayerFacade:
         self.__inventory.perder_ficha()
         self.__original_player.perder_ficha()
     
-    # ========== Delegación a PlayerScore ==========
+    # Delegación a PlayerScore 
     
     def get_puntos(self) -> int:
         """Retorna los puntos del jugador."""
@@ -223,7 +212,7 @@ class PlayerFacade:
         self.__score.sumar_puntos(puntos)
         self.__original_player.sumar_puntos(puntos)
     
-    # ========== Métodos adicionales ==========
+    #  Métodos adicionales 
     
     def reset(self) -> None:
         """Reinicia fichas y puntos a valores iniciales."""
@@ -264,7 +253,7 @@ class PlayerFacade:
         
         return player
     
-    # ========== Métodos especiales ==========
+    #  Métodos especiales 
     
     def __repr__(self) -> str:
         return (
