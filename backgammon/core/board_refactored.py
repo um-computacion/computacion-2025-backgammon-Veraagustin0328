@@ -1,16 +1,3 @@
-"""
-Implementación SOLID de Board siguiendo SRP.
-
-Separa las responsabilidades de Board en:
-- BoardPoints: Gestión de puntos 1-24
-- BarManager: Gestión de la barra (fichas capturadas)
-- BearOffManager: Gestión de bear off (fichas sacadas)
-- CaptureRules: Lógica de captura de fichas
-- BoardValidator: Validaciones de colocación
-
-BoardFacade coordina estos componentes siguiendo el patrón Facade.
-"""
-
 from __future__ import annotations
 from typing import List, Optional, Tuple, TYPE_CHECKING
 
@@ -407,7 +394,7 @@ class BoardFacade:
         # Guardar referencia a Board original para compatibilidad
         self.__original_board = Board()
     
-    # ========== Getters y Setters de componentes ==========
+    #  Getters y Setters de componentes 
     
     def get_points_component(self) -> BoardPoints:
         """Getter del componente de puntos."""
@@ -452,7 +439,7 @@ class BoardFacade:
         """Setter del componente de validación."""
         self.__validator = validator
     
-    # ========== Delegación a BoardPoints ==========
+    #  Delegación a BoardPoints 
     
     @property
     def points(self) -> List[List]:
@@ -482,7 +469,7 @@ class BoardFacade:
         # Sincronizar con Board original
         self.__original_board.colocar_ficha(player, point)
     
-    # ========== Delegación a BarManager ==========
+    #  Delegación a BarManager
     
     @property
     def bar(self) -> List:
@@ -501,7 +488,7 @@ class BoardFacade:
         """Saca una ficha de la barra."""
         return self.__bar.remove_from_bar(color)
     
-    # ========== Delegación a BearOffManager ==========
+    #  Delegación a BearOffManager 
     
     @property
     def off(self) -> dict:
@@ -524,7 +511,7 @@ class BoardFacade:
         """Verifica si un jugador ganó."""
         return self.__bear_off.has_won(color)
     
-    # ========== Delegación a BoardValidator ==========
+    #  Delegación a BoardValidator 
     
     def is_empty(self, point: int) -> bool:
         """Verifica si un punto está vacío."""
@@ -538,7 +525,7 @@ class BoardFacade:
         """Verifica si se puede colocar una ficha."""
         return self.__validator.can_place_checker(point, color)
     
-    # ========== Operaciones con captura ==========
+    # Operaciones con captura 
     
     def mover_ficha(self, origin: int, dest: int) -> None:
         """
@@ -561,7 +548,7 @@ class BoardFacade:
         # Colocar la ficha en el destino
         self.__points.add_checker_to_point(dest, checker)
     
-    # ========== Métodos de análisis ==========
+    # Métodos de análisis 
     
     def is_in_home_board(self, point: int, color: str) -> bool:
         """
@@ -622,7 +609,7 @@ class BoardFacade:
                 positions.append((point, self.point_count(point)))
         return positions
     
-    # ========== Limpieza y reinicio ==========
+    # Limpieza y reinicio
     
     def clear(self) -> None:
         """Limpia el tablero completamente."""
@@ -630,7 +617,7 @@ class BoardFacade:
         self.__bar.clear()
         self.__bear_off.clear()
     
-    # ========== Representación ==========
+    #  Representación 
     
     def __str__(self) -> str:
         """Representación en string del tablero."""
